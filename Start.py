@@ -1,13 +1,13 @@
 import sys
 import random
-
+import os
 #PyQt5中使用的基本控件
 from PyQt5.QtWidgets import QApplication, QMainWindow,QMessageBox
 from PyQt5.QtGui import QPixmap
 
 #导入designer界面
 from Ui_抽卡系统 import*
-
+import conn2sql
 class MyMainForm(QMainWindow, Ui_Form): 
     def __init__(self, parent=None):
         super(MyMainForm, self).__init__(parent)
@@ -28,6 +28,17 @@ class MyMainForm(QMainWindow, Ui_Form):
         self.load_image(image_path)
         image_path = "res/2.5th Anniversary支援卡池.png" #默认出现的图片
         self.load_image_2(image_path)
+
+        #连接数据库
+        db_name = "card_database.db"
+        #未创建数据库则创建
+        if os.path.exists(db_name):
+             pass
+        else:
+             conn2sql.create_database_from_sql("data/draw_card.sql",db_name)
+             conn2sql.insert_cardpool("data/cardpool.txt",db_name)
+             conn2sql.insert_card("data/card.txt",db_name)
+             conn2sql.insert_pool_card("data/pool&card.txt",db_name)
 
 #################### 加载图片，参数设置一个图片的路径
 
@@ -70,6 +81,9 @@ class MyMainForm(QMainWindow, Ui_Form):
         ssrnum=int(self.value_ssrnum.text())
         srnum=int(self.value_srnum.text())
         rnum=int(self.value_rnum.text())
+        poolname=self.cardpool_Box.currentText()
+        db_name = "card_database.db"
+
 
          # 定义不同星级卡的概率
         star_probabilities = {
@@ -79,7 +93,9 @@ class MyMainForm(QMainWindow, Ui_Form):
         }
         # 根据概率随机抽取星级
         star = random.choices(list(star_probabilities.keys()), weights=list(star_probabilities.values()), k=1)[0]
-
+        #得到抽卡结果
+        cardname=conn2sql.get_cardname(pool_name=poolname,star=star,db_name=db_name)
+        conn2sql.insert_draw_log(db_name,poolname,cardname) #存入抽卡记录的数据库
         #显示抽卡结果
         image_path = "res/"+star+".png"  # 替换为你的图片路径
         pixmap = QPixmap(image_path) #变为Qpixmap对象
@@ -102,6 +118,11 @@ class MyMainForm(QMainWindow, Ui_Form):
         
         self.value_Pssr.setText(str(round(ssrnum*100/(getnum),2))+"%")
 
+        #输出日志文件
+        table_name="draw_log"
+        txt_file="draw_log.txt"
+        conn2sql.export_table_to_txt(table_name,db_name,txt_file) #抽卡记录表导出为txt
+
     def ten(self):
         #单抽结果置为空
         self.label_11.clear()
@@ -110,6 +131,8 @@ class MyMainForm(QMainWindow, Ui_Form):
         ssrnum=int(self.value_ssrnum.text())
         srnum=int(self.value_srnum.text())
         rnum=int(self.value_rnum.text())
+        poolname=self.cardpool_Box.currentText()
+        db_name = "card_database.db"
 
          # 定义不同星级卡的概率
         star_probabilities = {
@@ -134,8 +157,13 @@ class MyMainForm(QMainWindow, Ui_Form):
                 cards_star.append(card_type)
             
             if 'SR' in cards_star:
-                break
-
+                #得到抽卡结果
+                for i in range(10):
+                    cardname=conn2sql.get_cardname(pool_name=poolname,star=cards_star[i],db_name=db_name)
+                    conn2sql.insert_draw_log(db_name,poolname,cardname) #存入抽卡记录的数据库
+                break 
+            
+             
         #将十张卡内容展现出来，并计算抽卡结果的计数
         self.labels = [self.label_1, self.label_2, self.label_3, self.label_4, self.label_5,
                        self.label_6, self.label_7, self.label_8, self.label_9, self.label_10] #将标签存放为标签数组
@@ -162,6 +190,11 @@ class MyMainForm(QMainWindow, Ui_Form):
         self.value_ssrnum.setText(str(ssrnum))
         self.value_Pssr.setText(str(round(ssrnum*100/(getnum),2))+"%")
 
+        #输出日志文件
+        table_name="draw_log"
+        txt_file="draw_log.txt"
+        conn2sql.export_table_to_txt(table_name,db_name,txt_file) #抽卡记录表导出为txt
+
 ################# 支援卡池（上两个函数的复制，就是改变了标签名字，xxx->xxx_2）
     def one_2(self):
          #清空十连的显示结果
@@ -174,7 +207,8 @@ class MyMainForm(QMainWindow, Ui_Form):
         ssrnum=int(self.value_ssrnum_3.text())
         srnum=int(self.value_srnum_2.text())
         rnum=int(self.value_rnum_3.text())
-
+        poolname=self.cardpool_Box_2.currentText()
+        db_name = "card_database.db"
          # 定义不同星级卡的概率
         star_probabilities = {
             "R": 0.79,
@@ -183,6 +217,9 @@ class MyMainForm(QMainWindow, Ui_Form):
         }
         # 根据概率随机抽取星级
         star = random.choices(list(star_probabilities.keys()), weights=list(star_probabilities.values()), k=1)[0]
+        #得到抽卡结果
+        cardname=conn2sql.get_cardname(pool_name=poolname,star=star,db_name=db_name)
+        conn2sql.insert_draw_log(db_name,poolname,cardname) #存入抽卡记录的数据库
 
         #显示抽卡结果
         image_path = "res/"+star+".png"  # 替换为你的图片路径
@@ -204,7 +241,12 @@ class MyMainForm(QMainWindow, Ui_Form):
             ssrnum=ssrnum+1
             self.value_ssrnum_3.setText(str(ssrnum))
         
-        self.value_Pssr_3.setText(str(round(ssrnum*100/(getnum),2))+"%")         
+        self.value_Pssr_3.setText(str(round(ssrnum*100/(getnum),2))+"%")  
+
+        #输出日志文件
+        table_name="draw_log"
+        txt_file="draw_log.txt"
+        conn2sql.export_table_to_txt(table_name,db_name,txt_file) #抽卡记录表导出为txt       
 
 
     def ten_2(self):
@@ -215,6 +257,8 @@ class MyMainForm(QMainWindow, Ui_Form):
         ssrnum=int(self.value_ssrnum_3.text())
         srnum=int(self.value_srnum_2.text())
         rnum=int(self.value_rnum_3.text())
+        poolname=self.cardpool_Box_2.currentText()
+        db_name = "card_database.db"
 
          # 定义不同星级卡的概率
         star_probabilities = {
@@ -239,6 +283,10 @@ class MyMainForm(QMainWindow, Ui_Form):
                 cards_star.append(card_type)
             
             if 'SR' in cards_star:
+                #得到抽卡结果
+                for i in range(10):
+                    cardname=conn2sql.get_cardname(pool_name=poolname,star=cards_star[i],db_name=db_name)
+                    conn2sql.insert_draw_log(db_name,poolname,cardname) #存入抽卡记录的数据库
                 break
 
         #将十张卡内容展现出来，并计算抽卡结果的计数
@@ -267,7 +315,10 @@ class MyMainForm(QMainWindow, Ui_Form):
         self.value_ssrnum_3.setText(str(ssrnum))
         self.value_Pssr_3.setText(str(round(ssrnum*100/(getnum),2))+"%")
         
-
+        #输出日志文件
+        table_name="draw_log"
+        txt_file="draw_log.txt"
+        conn2sql.export_table_to_txt(table_name,db_name,txt_file) #抽卡记录表导出为txt
 
 ####################################
      #定义公告函数
