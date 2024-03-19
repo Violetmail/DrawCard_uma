@@ -17,7 +17,7 @@ def create_database_from_sql(sql_file, db_name):
 def insert_cardpool(text_file, db_name):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
-    with open(text_file, 'r') as file:
+    with open(text_file, 'r',encoding='utf-8') as file:
         lines = file.readlines()
         for line in lines:
             pool_no, pool_name,pool_up = line.strip().split(",")
@@ -30,7 +30,7 @@ def insert_card(text_file, db_name):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
-    with open(text_file, 'r') as file:
+    with open(text_file, 'r',encoding='utf-8') as file:
         lines = file.readlines()
         for line in lines:
             card_no, card_name,card_kind,card_star= line.strip().split(",")
@@ -42,7 +42,7 @@ def insert_card(text_file, db_name):
 def insert_pool_card(text_file, db_name):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
-    with open(text_file, 'r') as file:
+    with open(text_file, 'r',encoding='utf-8') as file:
         lines = file.readlines()
         for line in lines:
             pool_name,card_name=line.strip().split(",")

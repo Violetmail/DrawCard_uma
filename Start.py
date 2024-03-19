@@ -323,7 +323,7 @@ class MyMainForm(QMainWindow, Ui_Form):
 ####################################
      #定义公告函数
     def ask(self):         
-        text=open("data/公告.txt").read()           
+        text=open("data/公告.txt",encoding='utf-8').read()           
         QMessageBox.about(self, "公告内容", text )   
     
 
